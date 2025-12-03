@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: varos_teste_db
+      MYSQL_ROOT_PASSWORD: mysql123
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://root:mysql123@db:3306/varos_teste_db
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+
+volumes:
+  db_data:

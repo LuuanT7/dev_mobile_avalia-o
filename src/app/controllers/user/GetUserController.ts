@@ -1,0 +1,25 @@
+// core/controllers/student.controller.ts
+
+import { GetUserService } from "@/services/users/GetUserServices";
+
+interface Filters {
+    id?: string | null
+    name?: string | null
+    classRoom?: string | null
+}
+
+export class GetUserController {
+    constructor(
+        private getUserService: GetUserService,
+
+    ) { }
+
+    async getAll({ id, classRoom, name }: Filters) {
+        return this.getUserService.getAll({
+            id, classRoom, name
+        });
+    }
+    async getbyId(id: string) {
+        return this.getUserService.getbyId(id);
+    }
+}
