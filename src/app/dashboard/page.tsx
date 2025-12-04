@@ -5,13 +5,14 @@ import axios from 'axios';
 // import { createUser, fetchConsultants, fetchFilteredConsultants } from '@/lib/api/users/users';
 import logo from '@/assets/logo.png';
 import { CreateUser, User } from '@/lib/api/users/userTypes';
-import { UserCreateModal } from '@/components/UsersModal';
+import { UserCreateModal, UserFormValues } from '@/components/UsersModal';
 import { permission } from 'process';
-import { CreateClass } from '@/lib/api/class/classTypes';
-import { fetchUsers } from '@/lib/api/users/users';
+import { CreateClass, IClassRoom } from '@/lib/api/classRoom/classTypes';
+import { createUser, fetchUsers } from '@/lib/api/users/users';
 import { formatDate } from '@/utils/FormattedDate';
 import { CreateClassModal } from '@/components/ClassModal';
 import { ChatModal } from '@/components/ChatModal';
+import { fetchClassRoom } from '@/lib/api/classRoom/classRoom';
 
 
 
@@ -20,19 +21,12 @@ export default function DashboardPage() {
   const [name, setName] = useState(''); // Nome do aluno
   const [email, setEmail] = useState(''); // Email do aluno
   const [users, setUsers] = useState<User[]>([]);
-  console.log("🚀 ~ DashboardPage ~ users:", users)
-  const [classes, setClasses] = useState("Primeiro A");
+  const [classes, setClasses] = useState("1º ano");
+  const [classRoom, setClassRoom] = useState<IClassRoom[]>([]);
+
   const [chats, setChats] = useState("Primeiro A");
 
 
-  // useEffect(() => {
-  //   const fetch = async () => {
-  //     const data = await fetchConsultants()
-  //     setConsultant(data)
-  //     return data
-  //   }
-  //   fetch()
-  // }, [])
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateClassModalOpen, setIsCreateClassModalOpen] = useState(false);
@@ -40,25 +34,6 @@ export default function DashboardPage() {
 
 
 
-  const clienteMock = [
-    {
-      id: 1,
-      name: 'Fulano de Tal',
-      email: 'fulano@example.com',
-      age: 16,
-      permission: 'ADMINISTRADOR',
-      criadoEm: '2025-10-21T10:30:00Z',
-    },
-    {
-      id: 2,
-      name: 'Cicrano de Tal',
-      email: 'cicrano@example.com',
-      age: 12,
-      permission: 'ESTUDANTE',
-      criadoEm: '2025-10-21T10:30:00Z',
-
-    }
-  ];
 
   useEffect(() => {
     const fetch = async () => {
@@ -69,6 +44,26 @@ export default function DashboardPage() {
     fetch()
 
   }, [name]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const data = await fetchClassRoom();
+        console.log("🚀 ~ fetchClassRoom ~ data:", data)
+        if (data && Array.isArray(data)) {
+          setClassRoom(data);
+        } else {
+          console.warn("⚠️ fetchClassRoom retornou dados inválidos:", data);
+          setClassRoom([]);
+        }
+      } catch (error) {
+        console.error("❌ Erro ao buscar classes:", error);
+        setClassRoom([]);
+      }
+    }
+    fetch()
+
+  }, []);
 
   // const searchHandler = async () => {
   //   const data = await fetchFilteredConsultants({ name, classes, startDate, endDate });
@@ -89,13 +84,16 @@ export default function DashboardPage() {
 
   const handleCreateUser = async (user: CreateUser) => {
     try {
-      // Caso você implementa a API, substitua para o createUser real e recarregue os dados.
-      // await createUser(user);
+      const result = await createUser(user);
+      console.log("🚀 ~ handleCreateUser ~ result:", result)
       setIsCreateModalOpen(false);
-      // fetchUsers();
-      // Para efeito mock/demo, apenas fecha o modal
-    } catch (err) {
-      alert("Erro ao criar usuário");
+      // Recarregar a lista de usuários
+      const data = await fetchUsers({ name });
+      setUsers(data);
+    } catch (err: any) {
+      console.error("Erro ao criar usuário:", err);
+      const errorMessage = err?.response?.data?.error || err?.message || "Erro ao criar usuário";
+      alert(errorMessage);
     }
   };
 
@@ -179,9 +177,9 @@ export default function DashboardPage() {
                   className="bg-[#222729] border border-[#2a2e38] text-[#B0B7BE] px-3 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
                 >
                   {
-                    users?.map((user) => {
+                    classRoom?.map((room) => {
                       return (
-                        <option key={user.id}>{user?.email}</option>
+                        <option key={room.id} value={room.id}>{room.name}</option>
                       )
                     })
                   }

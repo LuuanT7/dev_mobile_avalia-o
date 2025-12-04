@@ -3,7 +3,7 @@ import './globals.css'
 
 
 export const metadata = {
-  title: 'Varos App',
+  title: 'Avaliation',
   description: 'CRUD simples de usuários'
 }
 

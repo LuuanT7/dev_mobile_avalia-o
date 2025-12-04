@@ -31,9 +31,10 @@ export const createUser = async (data: CreateUser) => {
   try {
     const res = await axios.post('/api/users', data);
     return res.data;
-  } catch (error) {
-    console.error(error);
-    return console.error('Erro ao criar usuário');
+  } catch (error: any) {
+    console.error('Erro ao criar usuário:', error);
+    // Re-lançar o erro para que o componente possa tratá-lo
+    throw error;
   }
 
 };

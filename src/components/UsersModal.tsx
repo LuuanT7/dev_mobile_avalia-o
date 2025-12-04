@@ -2,6 +2,8 @@ import { CreateUser } from "@/lib/api/users/userTypes";
 import React, { useEffect, useState } from "react";
 import Field from "@/components/form/Field";
 import { useFormValidator } from "./form/useFormValidation";
+import { fetchClassRoom } from "@/lib/api/classRoom/classRoom";
+import { IClassRoom } from "@/lib/api/classRoom/classTypes";
 
 // Importa o hook dinâmico já tipado
 
@@ -25,6 +27,8 @@ export const UserCreateModal: React.FC<ModalProps> = ({ open, onClose, onSubmit 
 
     const [mounted, setMounted] = useState(false);
     const [animateIn, setAnimateIn] = useState(false);
+    const [classRoom, setClassRoom] = useState<IClassRoom[]>([]);
+
 
     // 🔥 Estado alinhado com UserFormValues
     const [form, setForm] = useState<UserFormValues>({
@@ -58,6 +62,26 @@ export const UserCreateModal: React.FC<ModalProps> = ({ open, onClose, onSubmit 
 
         ]
     };
+
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                const data = await fetchClassRoom();
+                console.log("🚀 ~ fetchClassRoom ~ data:", data)
+                if (data && Array.isArray(data)) {
+                    setClassRoom(data);
+                } else {
+                    console.warn("⚠️ fetchClassRoom retornou dados inválidos:", data);
+                    setClassRoom([]);
+                }
+            } catch (error) {
+                console.error("❌ Erro ao buscar classes:", error);
+                setClassRoom([]);
+            }
+        }
+        fetch()
+
+    }, []);
 
     //Hook Custom 
     const {
@@ -101,7 +125,8 @@ export const UserCreateModal: React.FC<ModalProps> = ({ open, onClose, onSubmit 
                     email: "",
                     age: "",
                     userType: 'STUDENTS',
-                    classes: "",
+                    classRoomId: "",
+                    password: ""
                 });
 
 
@@ -153,6 +178,16 @@ export const UserCreateModal: React.FC<ModalProps> = ({ open, onClose, onSubmit 
 
                 <form className="flex flex-col gap-6 p-8" onSubmit={handleSubmit}>
 
+                    <Field label="Senha do Adminstrador" required error={errors.password ?? undefined} touched={touched.password}>
+                        <input
+                            type="password"
+                            className={`w-full bg-[#131516] border ${errors.name && touched.name ? "border-red-500" : "border-[#2a2e38]"} text-[#B0B7BE] px-3 py-2 rounded-md`}
+                            value={form.password}
+                            onChange={(e) => setForm({ ...form, password: e.target.value })}
+                            onBlur={handleBlur}
+                        />
+                    </Field>
+
                     {/* Nome + Idade */}
                     <div className="flex gap-4">
                         <Field label="Nome" required error={errors.name ?? undefined} touched={touched.name}>
@@ -191,26 +226,43 @@ export const UserCreateModal: React.FC<ModalProps> = ({ open, onClose, onSubmit 
                     <Field label="Tipo do usuário" required error={errors.userType ?? undefined} touched={touched.userType}>
                         <select
                             className={`w-full bg-[#131516] border ${errors.userType && touched.userType ? "border-red-500" : "border-[#2a2e38]"} text-[#B0B7BE] px-3 py-2 rounded-md`}
-                            value={form.userType}
-                            onChange={(e) => setForm({ ...form, userType: e.target.value })}
-
+                            value={form.userType || ""}
+                            onChange={(e) => {
+                                const value = e.target.value as "ADMIN" | "STUDENTS";
+                                setForm({ ...form, userType: value });
+                            }}
                         >
-                            <option disabled>Selecione o tipo do usuário</option>
-                            <option value="STUDENT">Estudante</option>
+                            <option value="" disabled>Selecione o tipo do usuário</option>
+                            <option value="STUDENTS">Estudante</option>
                             <option value="ADMIN">Administrador</option>
                         </select>
                     </Field>
 
                     {/* Classe */}
-                    <Field label="Classe" required error={errors.classes ?? undefined} touched={touched.classes}>
-                        <input
-                            type="text"
-                            placeholder="Ex: Primeiro A"
-                            className={`w-full bg-[#131516] border ${errors.classes && touched.classes ? "border-red-500" : "border-[#2a2e38]"} text-[#B0B7BE] px-3 py-2 rounded-md`}
-                            value={form.classes}
-                            onChange={(e) => setForm({ ...form, classes: e.target.value })}
-                            onBlur={handleBlur}
-                        />
+                    <Field label="Classe" required error={errors.classRoomId ?? undefined} touched={touched.classRoomId}>
+                        <select
+                            name="classRoomId"
+                            value={form.classRoomId || ""}
+                            onChange={(e) => {
+                                setForm({ ...form, classRoomId: e.target.value });
+                            }}
+                            onBlur={(e) => {
+                                const { name, value } = e.target;
+                                setTouched(prev => ({ ...prev, [name]: true }));
+                                validateField(name as keyof typeof form, value);
+                            }}
+                            className={`w-full bg-[#131516] border ${errors.classRoomId && touched.classRoomId ? "border-red-500" : "border-[#2a2e38]"} text-[#B0B7BE] px-3 py-2 rounded-md`}
+                        >
+                            <option value="" disabled>Selecione uma classe</option>
+                            {
+                                classRoom?.map((room) => {
+                                    return (
+                                        <option key={room.id} value={room.id}>{room.name}</option>
+                                    )
+                                })
+                            }
+
+                        </select>
                     </Field>
 
                     {/* Botão */}
