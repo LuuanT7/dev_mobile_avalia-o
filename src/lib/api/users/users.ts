@@ -3,12 +3,19 @@ import { UsersFilters, CreateUser, User } from "./userTypes";
 
 export const fetchUsers = async (filter: UsersFilters) => {
   try {
-    const res = await axios.get("/api/users", {
-      params: {
-        name: filter.name, // do seu state
+    const params: Record<string, string> = {};
+    
+    if (filter.name && filter.name.trim() !== '') {
+      params.name = filter.name;
+    }
+    if (filter.email && filter.email.trim() !== '') {
+      params.email = filter.email;
+    }
+    if (filter.classRoom && filter.classRoom.trim() !== '') {
+      params.classRoom = filter.classRoom;
+    }
 
-      },
-    });
+    const res = await axios.get("/api/users", { params });
     console.log("✅ Consultores filtrados:", res.data);
     return res.data
   } catch (err) {

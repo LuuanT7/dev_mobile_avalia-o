@@ -11,18 +11,41 @@ services:
       - "3306:3306"
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: mysql://root:mysql123@db:3306/varos_teste_db
       NEXT_TELEMETRY_DISABLED: "1"
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: development
     depends_on:
       - db
+      - rabbitmq
     volumes:
+      # POR QUÊ: Monta o código fonte para hot-reload em desenvolvimento
       - .:/app
+      # POR QUÊ: Evita sobrescrever node_modules do container
+      - /app/node_modules
+      - /app/.next
     stdin_open: true
     tty: true
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
 volumes:
   db_data:
+  rabbitmq_data:

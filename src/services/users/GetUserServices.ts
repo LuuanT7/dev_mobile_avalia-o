@@ -16,29 +16,40 @@ export class GetUserService {
 
 
     async getAll({ name, email, classRoom }: Filters) {
-
-
         const where: Prisma.UserWhereInput = {};
-        const whereClassRooms: Prisma.ClassRoomWhereInput = {};
 
-
-        if (name) {
+        if (name && name.trim() !== '') {
             where.name = {
                 contains: name.toLowerCase(),
             };
         }
-        if (email) {
+        if (email && email.trim() !== '') {
             where.email = {
                 contains: email.toLowerCase(),
             };
         }
-        if (classRoom) {
-            whereClassRooms.name = {
-                contains: classRoom.toLowerCase(),
+        if (classRoom && classRoom.trim() !== '') {
+            where.enrollments = {
+                some: {
+                    classRoom: {
+                        name: {
+                            contains: classRoom.toLowerCase(),
+                        }
+                    }
+                }
             };
         }
 
-        return this.db.user.findMany({ where, include: { enrollments: { include: { classRoom: true } } } });
+        return this.db.user.findMany({
+            where,
+            include: {
+                enrollments: {
+                    include: {
+                        classRoom: true
+                    }
+                }
+            }
+        });
     }
 
 

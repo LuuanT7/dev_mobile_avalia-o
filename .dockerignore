@@ -1,0 +1,55 @@
+# POR QUÊ: Arquivos que não devem ser copiados para o Docker
+# Reduz tamanho da imagem e acelera o build
+
+# Dependências
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Build
+.next
+out
+dist
+build
+
+# Ambiente
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentação
+*.md
+!README.md
+
+# Testes
+coverage
+.nyc_output
+
+# Outros
+*.log
+.cache
+

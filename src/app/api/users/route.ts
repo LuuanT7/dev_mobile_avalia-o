@@ -17,11 +17,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const name = searchParams.get("name");
+    const email = searchParams.get("email");
     const classRoom = searchParams.get("classRoom");
 
 
     const where = {
-        name, classRoom, id
+        id, name, email, classRoom
     }
 
     const data = await getUserController.getAll(where);

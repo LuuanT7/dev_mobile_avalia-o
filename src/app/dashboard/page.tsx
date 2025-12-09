@@ -12,24 +12,32 @@ import { createUser, fetchUsers } from '@/lib/api/users/users';
 import { formatDate } from '@/utils/FormattedDate';
 import { CreateClassModal } from '@/components/ClassModal';
 import { ChatModal } from '@/components/ChatModal';
+import { ChatLoginModal } from '@/components/ChatLoginModal';
 import { fetchClassRoom } from '@/lib/api/classRoom/classRoom';
 
 
 
 
 export default function DashboardPage() {
+  // controle de filtros
   const [name, setName] = useState(''); // Nome do aluno
   const [email, setEmail] = useState(''); // Email do aluno
+  const [filterClassRoom, setFilterClassRoom] = useState(''); // Filtro de classe
+
+
+  // Listagem de usuários
   const [users, setUsers] = useState<User[]>([]);
-  const [classes, setClasses] = useState("1º ano");
   const [classRoom, setClassRoom] = useState<IClassRoom[]>([]);
 
-  const [chats, setChats] = useState("Primeiro A");
+  // Dados do chat (preenchidos após login no modal de login)
+  const [chatStudentId, setChatStudentId] = useState<string>('');
+  const [chatStudentName, setChatStudentName] = useState<string>('');
+  const [chatClassRoomName, setChatClassRoomName] = useState<string>('');
 
-
-
+  // Controle de modais
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateClassModalOpen, setIsCreateClassModalOpen] = useState(false);
+  const [isChatLoginModalOpen, setIsChatLoginModalOpen] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
 
 
@@ -37,13 +45,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await fetchUsers({ name });
+      const data = await fetchUsers({ name, email, classRoom: filterClassRoom });
       // console.log("🚀 ~ fetch ~ data:", data)
       setUsers(data)
     }
     fetch()
 
-  }, [name]);
+  }, [name, email, filterClassRoom]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -79,8 +87,65 @@ export default function DashboardPage() {
   const handleOpenCreateClassModal = () => setIsCreateClassModalOpen(true);
   const handleCloseCreateClassModal = () => setIsCreateClassModalOpen(false);
 
-  const handleOpenChatModal = () => setIsChatModalOpen(true);
-  const handleCloseChatModal = () => setIsChatModalOpen(false);
+  /**
+   * POR QUÊ: Abre o modal de login do chat primeiro.
+   * O usuário precisa informar nome e sala antes de entrar no chat.
+   */
+  const handleOpenChatLogin = () => {
+    setIsChatLoginModalOpen(true);
+  };
+
+  /**
+   * POR QUÊ: Fecha o modal de login e reseta os dados do chat.
+   */
+  const handleCloseChatLogin = () => {
+    setIsChatLoginModalOpen(false);
+  };
+
+  /**
+   * POR QUÊ: Chamado quando o usuário faz login no chat.
+   * Recebe os dados (studentId, studentName, classRoomName) e abre o modal de chat.
+   * Também verifica se o aluno pertence àquela sala antes de permitir acesso.
+   */
+  const handleChatLogin = async (studentId: string, studentName: string, classRoomName: string) => {
+    try {
+      // Verifica se o aluno pertence àquela sala
+      const response = await axios.get(`/api/users/${studentId}/classrooms`);
+      const userClassRooms = response.data || [];
+      const hasAccess = userClassRooms.some((room: IClassRoom) => room.name === classRoomName);
+
+      if (!hasAccess) {
+        alert('Este aluno não pertence a esta sala de aula!');
+        return;
+      }
+
+      // Se tiver acesso, salva os dados e abre o chat
+      setChatStudentId(studentId);
+      setChatStudentName(studentName);
+      setChatClassRoomName(classRoomName);
+      setIsChatLoginModalOpen(false);
+      setIsChatModalOpen(true);
+    } catch (error) {
+      console.error('❌ Erro ao verificar acesso:', error);
+      alert('Erro ao verificar acesso à sala. Tente novamente.');
+    }
+  };
+
+  /**
+   * POR QUÊ: Fecha o modal de chat e limpa os dados.
+   */
+  const handleCloseChatModal = () => {
+    setIsChatModalOpen(false);
+    setChatStudentId('');
+    setChatStudentName('');
+    setChatClassRoomName('');
+  };
+
+  const handleResetFilters = () => {
+    setName('');
+    setEmail('');
+    setFilterClassRoom('');
+  };
 
   const handleCreateUser = async (user: CreateUser) => {
     try {
@@ -152,10 +217,11 @@ export default function DashboardPage() {
                   }}
                   className="bg-[#222729] border border-[#2a2e38] text-[#B0B7BE] px-3 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
                 >
+                  <option value="">Todos</option>
                   {
                     users?.map((user) => {
                       return (
-                        <option key={user.id}>{user?.name}</option>
+                        <option key={user.id} value={user.name}>{user?.name}</option>
                       )
                     })
                   }
@@ -167,19 +233,20 @@ export default function DashboardPage() {
               <div className="flex flex-row items-center gap-2">
                 <label className="text-xs text-gray-400 mb-1">Classes</label>
                 <select
-                  value={classes}
+                  value={filterClassRoom}
 
                   onChange={(e) => {
-                    setClasses(e.target.value)
+                    setFilterClassRoom(e.target.value)
                     // searchHandler()
                   }}
 
                   className="bg-[#222729] border border-[#2a2e38] text-[#B0B7BE] px-3 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
                 >
+                  <option value="">Todas</option>
                   {
                     classRoom?.map((room) => {
                       return (
-                        <option key={room.id} value={room.id}>{room.name}</option>
+                        <option key={room.id} value={room.name}>{room.name}</option>
                       )
                     })
                   }
@@ -199,16 +266,24 @@ export default function DashboardPage() {
 
                   className="bg-[#222729] border border-[#2a2e38] text-[#B0B7BE] px-3 py-1 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
                 >
+                  <option value="">Todos</option>
                   {
                     users?.map((user) => {
                       return (
-                        <option key={user.id}>{user?.email}</option>
+                        <option key={user.id} value={user.email}>{user?.email}</option>
                       )
                     })
                   }
 
                 </select>
               </div>
+
+              <button
+                onClick={handleResetFilters}
+                className="bg-[#2a2e38] hover:bg-[#3a3e48] text-[#B0B7BE] font-medium px-4 py-2 rounded-md transition-colors shadow-md text-sm"
+              >
+                Limpar Filtros
+              </button>
             </div>
 
 
@@ -242,7 +317,10 @@ export default function DashboardPage() {
           </tbody>
         </table>
         <div className='w-full flex align-end justify-end py-2 gap-4 '>
-          <button className="bg-[#1B3F1B] hover:bg-green-700 text-green-400 h-12 font-normal px-6 py-2 rounded-3xl transition-colors shadow-md" onClick={handleOpenChatModal}>
+          <button
+            className="bg-[#1B3F1B] hover:bg-green-700 text-green-400 h-12 font-normal px-6 py-2 rounded-3xl transition-colors shadow-md"
+            onClick={handleOpenChatLogin}
+          >
             Chat
           </button>
         </div>
@@ -259,14 +337,30 @@ export default function DashboardPage() {
         onClose={handleCloseCreateClassModal}
         onSubmit={handleCreateCLass}
       />
+      {/* 
+        POR QUÊ: Modal de login do chat.
+        Permite que o usuário selecione nome e sala antes de entrar no chat.
+      */}
+      <ChatLoginModal
+        open={isChatLoginModalOpen}
+        onClose={handleCloseChatLogin}
+        onLogin={handleChatLogin}
+        users={users}
+        classRooms={classRoom}
+      />
+
+      {/* 
+        POR QUÊ: Modal do chat em si.
+        Só abre após o login ser feito com sucesso.
+        Recebe os dados do aluno e sala selecionados no modal de login.
+      */}
       <ChatModal
         open={isChatModalOpen}
         onClose={handleCloseChatModal}
-        onSubmit={(data) => {
-          console.log("Chat enviado:", data);
-          // setOpenChat(false);
-        }}
-
+        studentId={chatStudentId}
+        studentName={chatStudentName}
+        classRooms={classRoom}
+        userClassRooms={classRoom.filter(room => room.name === chatClassRoomName)}
       />
     </div>
   );

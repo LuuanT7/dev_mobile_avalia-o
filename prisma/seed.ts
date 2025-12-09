@@ -45,13 +45,6 @@ async function main() {
                 age: "35"
             },
             {
-                name: "Eloa Lattanzzi",
-                email: "eloa@example.com",
-                user_type: "STUDENTS",
-                age: "35"
-
-            },
-            {
                 name: "João Almeida",
                 email: "joao@example.com",
                 user_type: "STUDENTS",
