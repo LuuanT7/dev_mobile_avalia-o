@@ -17,11 +17,12 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const name = searchParams.get("name");
+    const email = searchParams.get("email");
     const classRoom = searchParams.get("classRoom");
 
 
     const where = {
-        name, classRoom, id
+        id, name, email, classRoom
     }
 
     const data = await getUserController.getAll(where);
@@ -29,9 +30,18 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const body = await req.json() as CreateUser;
+    try {
+        const body = await req.json() as CreateUser;
+        console.log("🚀 ~ POST ~ body:", body)
 
-
-    const data = await createUserController.create(body);
-    return Response.json(data);
+        const data = await createUserController.create(body);
+        return Response.json(data);
+    } catch (error) {
+        console.error("Erro na rota POST /api/users:", error);
+        const message = error instanceof Error ? error.message : "Erro desconhecido ao criar usuário";
+        return NextResponse.json(
+            { error: message },
+            { status: 400 }
+        );
+    }
 }

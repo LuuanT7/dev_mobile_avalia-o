@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Field from "@/components/form/Field";
 import { useFormValidator } from "./form/useFormValidation";
-import { CreateClass } from "@/lib/api/class/classTypes";
+import { CreateClass } from "@/lib/api/classRoom/classTypes";
 
 // Importa o hook dinâmico já tipado
 
