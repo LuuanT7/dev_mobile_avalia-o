@@ -1,0 +1,24 @@
+FROM node:20-bullseye
+
+WORKDIR /app
+
+# Instala dependências do sistema
+RUN apt-get update && apt-get install -y openssl
+
+# Copia arquivos de dependência
+COPY package.json package-lock.json* ./
+
+# Instala dependências
+RUN npm ci --legacy-peer-deps || npm install
+
+# Copia restante do código
+COPY . .
+
+# Gera o Prisma Client
+RUN npx prisma generate
+
+EXPOSE 3000
+
+# Executa migrations + seed + inicia o servidor custom
+CMD ["sh", "-c", "npx prisma db push && npm run prisma:seed && npm run dev:custom"]
+A
