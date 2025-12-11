@@ -21,4 +21,3 @@ EXPOSE 3000
 
 # Executa migrations + seed + inicia o servidor custom
 CMD ["sh", "-c", "npx prisma db push && npm run prisma:seed && npm run dev:custom"]
-A
