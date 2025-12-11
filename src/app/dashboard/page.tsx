@@ -36,10 +36,8 @@ export default function DashboardPage() {
 
   // Controle de modais
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCreateClassModalOpen, setIsCreateClassModalOpen] = useState(false);
   const [isChatLoginModalOpen, setIsChatLoginModalOpen] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-
 
 
 
@@ -83,9 +81,6 @@ export default function DashboardPage() {
 
   const handleOpenCreateModal = () => setIsCreateModalOpen(true);
   const handleCloseCreateModal = () => setIsCreateModalOpen(false);
-
-  const handleOpenCreateClassModal = () => setIsCreateClassModalOpen(true);
-  const handleCloseCreateClassModal = () => setIsCreateClassModalOpen(false);
 
   /**
    * POR QUÊ: Abre o modal de login do chat primeiro.
@@ -201,9 +196,6 @@ export default function DashboardPage() {
             <div className='w-full flex align-end justify-end py-2 gap-4'>
               <button className="bg-[#1B3F1B] hover:bg-green-700 text-green-400 font-medium px-6 py-2 rounded-lg transition-colors shadow-md" onClick={handleOpenCreateModal}>
                 Cadastrar Aluno +
-              </button>
-              <button className="bg-[#1B3F1B] hover:bg-green-700 text-green-400 font-medium px-6 py-2 rounded-lg transition-colors shadow-md" onClick={handleOpenCreateClassModal}>
-                Cadastrar Classes
               </button>
             </div>
             <div className="flex flex-wrap justify-center items-center gap-3  px-6 py-3 rounded-lg border border-[#222630] flex-1">
@@ -332,12 +324,6 @@ export default function DashboardPage() {
         onSubmit={handleCreateUser}
       />
 
-      <CreateClassModal
-        open={isCreateClassModalOpen}
-        onClose={handleCloseCreateClassModal}
-        onSubmit={handleCreateCLass}
-      />
-      {/* 
         POR QUÊ: Modal de login do chat.
         Permite que o usuário selecione nome e sala antes de entrar no chat.
       */}
